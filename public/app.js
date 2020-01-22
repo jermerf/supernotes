@@ -49,6 +49,12 @@ var app = new Vue({
       $.post("/logout", res => {
         if (res.success) {
           this.loggedIn = false
+          this.username = ""
+          this.createGroupText = ""
+          this.createNoteText = ""
+          this.notes = []
+          this.groups = []
+          this.groupId = ""
         }
       })
     },

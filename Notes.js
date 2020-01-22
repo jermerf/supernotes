@@ -187,6 +187,8 @@ const POST_HANDLERS = {
       ]}
       db.collection("notes").deleteOne(query)
         .then(() => {
+          req.query = req.query || {}
+          req.query['groupId'] = groupId
           GET_HANDLERS["/notes"](req, res)
         })
         .catch(error => res.send({ success: false, error }))
