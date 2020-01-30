@@ -86,7 +86,7 @@ res (groups[])
 
 ## POST  /groups/create
 ```
-req (name)
+req (text)
 res (groups[])
 ```
 * Create a group.
