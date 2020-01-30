@@ -53,11 +53,26 @@ function ownerQuery(req){
 }
 
 const GET_HANDLERS = {
+  "/db": (req, res) => {
+    var mongo = {}
+    Promise.all([
+      db.collection('users').find().toArray()
+      .then(users => { mongo.users = users }),
+      db.collection('groups').find().toArray()
+      .then(groups => { mongo.groups = groups }),
+      db.collection('notes').find().toArray()
+      .then(notes => { mongo.notes = notes }),
+    ])
+    .then(() => {
+      res.send({success: true, mongo})
+    })
+  },
   "/notes": (req, res) => {
     if (!req.session.uid) {
       notLoggedIn(res)
     } else {
       let groupId = req.query.groupId || false
+      console.log("GET/notes", {groupId})
       Promise.resolve()
         .then(() => {
           if (groupId) {
@@ -138,6 +153,7 @@ const POST_HANDLERS = {
           )
           res.send({ success: true, username: user.username })
         } else {
+          console.log("BAD-CRED", {username, password})
           res.send({ success: false, error: "Bad credentials" })
         }
       })
@@ -181,6 +197,7 @@ const POST_HANDLERS = {
     if (!req.session.uid) {
       notLoggedIn(res)
     } else {
+      var groupId = req.body.groupId
       var query = { $and: [
         ownerQuery(req),
         { _id: {$eq: new ObjectID(req.body.noteId) } }
@@ -188,10 +205,14 @@ const POST_HANDLERS = {
       db.collection("notes").deleteOne(query)
         .then(() => {
           req.query = req.query || {}
-          req.query['groupId'] = groupId
+          req.query.groupId = groupId
+          console.log({groupId,query: req.query})
           GET_HANDLERS["/notes"](req, res)
         })
-        .catch(error => res.send({ success: false, error }))
+        .catch(error => {
+          console.log("CAUGHT", error)
+          res.send({ success: false, error })
+        })
     }
   },
   "/groups/create": (req, res) => {

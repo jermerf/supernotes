@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
 const https = require('https')
@@ -14,7 +15,20 @@ const HTTPS_PORT = 443
 // const HTTP_PORT = 80
 
 const app = express()
-app.use(cors())
+const corsWhitelist = ["https://supernotes.duckdns.org", "http://localhost:8080", "http://localhost:8081"]
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (corsWhitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true)
+    } else {
+      console.log("CORS-Failed", {origin})
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  preflightContinue: true,
+  credentials: true
+}))
 app.use(bodyParser.urlencoded({
   extended: true
 }));

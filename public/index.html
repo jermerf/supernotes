@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,15 +8,23 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="pretty.css">
   <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
     crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"
     integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-json-tree-view@2.1.4/dist/vue-json-tree-view.min.js" integrity="sha256-DiL2xzjc0FB6EOF+9BAsWGM2xUuNZAgOUfc0qhGIPKc=" crossorigin="anonymous"></script>
 </head>
 
 <body>
   <div id="app">
+    <h1>Supernotes 
+      <button @click="refreshDatabase">Show Database</button>
+    </h1>
+    <div v-if="showMongo" class="popup">
+      <button @click="showMongo = false">Close</button>
+      <button @click="refreshDatabase">Refresh</button>
+      <tree-view :data="mongo" :options="{maxDepth: 3, rootObjectKey: 'Database'}"></tree-view>
+    </div>
     <main v-if="!loggedIn">
       <h4>Login</h4>
       <input v-model="username" placeholder="username" />
@@ -41,7 +50,7 @@
 
       <section>
         <h4>/notes</h4>
-        <input v-model="createNoteText" placeholder="name">
+        <textarea v-model="createNoteText" placeholder="note" cols="100" rows="5"></textarea><br>
         <button @click="createNote">/notes/create</button>
         <div v-for="note in notes" :key="note._id" class="note">
           {{note.text}}

@@ -1,3 +1,5 @@
+TreeView(Vue)
+
 Vue.config.devtools = true
 var app = new Vue({
   el: "#app",
@@ -10,9 +12,21 @@ var app = new Vue({
     createNoteText: "",
     notes: [],
     groupId: "",
-    groups: []
+    groups: [],
+    showMongo: false,
+    mongo: {}
   }),
   methods: {
+    refreshDatabase(){
+      this.showMongo = true
+      $.get('/db', res => {
+        if (res.success) {
+          this.mongo = res.mongo
+        } else {
+          this.res = JSON.stringify(res)
+        }
+      })
+    },
     login() {
       var data = {
         username: this.username,
@@ -90,10 +104,10 @@ var app = new Vue({
       })
     },
     removeNote(noteId){
-      console.log({noteId})
-      $.post("/notes/remove", { noteId }, res => {
+      var groupId = this.groupId
+      $.post("/notes/remove", { noteId, groupId }, res => {
         if (res.success) {
-          this.getNotes()
+          this.notes = res.notes
         } else {
           this.res = res
         }
@@ -102,7 +116,7 @@ var app = new Vue({
     removeGroup(groupId){
       $.post("/groups/remove", { groupId }, res => {
         if (res.success) {
-          this.getGroups()
+          this.groups = res.groups
         } else {
           this.res = res
         }
