@@ -101,3 +101,25 @@ res (groups[])
 * Remove a group.
 
 * Returns an updated list of groups.
+
+
+# OPTIONAL
+
+## POST  /notes/update
+```
+req (noteId, ?groupId)
+res (notes[])
+```
+* Update a note
+
+* Returns an updated list of notes.
+
+
+## POST  /groups/update
+```
+req (groupId)
+res (groups[])
+```
+* Update a group
+
+* Returns an updated list of groups.

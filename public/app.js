@@ -10,14 +10,58 @@ var app = new Vue({
     res: "",
     createGroupText: "",
     createNoteText: "",
-    notes: [],
     groupId: "",
     groups: [],
+    noteId: "",
+    notes: [],
+    updateGroupPopup: false,
+    updateNotePopup: false,
+    updateGroupText: "",
+    updateNoteText: "",
     showMongo: false,
     mongo: {}
   }),
   methods: {
-    refreshDatabase(){
+    showUpdateNote(note) {
+      this.noteId = note._id
+      this.updateNoteText = note.text
+      this.updateNotePopup = true
+    },
+    updateNote() {
+      $.post("/notes/update", {
+        text: this.updateNoteText,
+        noteId: this.noteId,
+        groupId: this.groupId
+      }, res => {
+        if (res.success) {
+          this.notes = res.notes
+          this.updateNoteText = ""
+          this.updateNotePopup = false
+        } else {
+          this.res = res
+        }
+      })
+    },
+    showUpdateGroup(group) {
+      this.groupId = group._id
+      this.updateGroupText = group.text
+      this.updateGroupPopup = true
+    },
+    updateGroup() {
+      $.post("/groups/update", {
+        text: this.updateGroupText,
+        groupId: this.groupId
+      }, res => {
+        if (res.success) {
+          this.groups = res.groups
+          this.updateGroupText = ""
+          this.updateGroupPopup = false
+        } else {
+          this.res = res
+        }
+      })
+    },
+    refreshDatabase() {
       this.showMongo = true
       $.get('/db', res => {
         if (res.success) {
@@ -82,6 +126,7 @@ var app = new Vue({
       })
     },
     getNotes(groupId) {
+      console.log(groupId)
       $.get("/notes", { groupId }, res => {
         if (res.success) {
           this.notes = res.notes
@@ -103,7 +148,7 @@ var app = new Vue({
         }
       })
     },
-    removeNote(noteId){
+    removeNote(noteId) {
       var groupId = this.groupId
       $.post("/notes/remove", { noteId, groupId }, res => {
         if (res.success) {
@@ -113,7 +158,7 @@ var app = new Vue({
         }
       })
     },
-    removeGroup(groupId){
+    removeGroup(groupId) {
       $.post("/groups/remove", { groupId }, res => {
         if (res.success) {
           this.groups = res.groups
@@ -141,6 +186,6 @@ var app = new Vue({
         this.loginSuccessful(res.username)
       }
     })
-    
+
   }
 })

@@ -19,9 +19,8 @@ input {
   border: 1px solid grey;
   font-size: 1rem;
 }
-button.delete{
+button.toright{
   float: right;
-  font-size: 1rem;
 }
 html, button, input, textarea {
   font-family: Arial, Helvetica, sans-serif;
@@ -34,32 +33,47 @@ button{
   color: white;
   transition: background-color 0.4s;
   background-color: #57d;
+  cursor: pointer;
 }
 button:active{
   transition: background-color 0s;
   background-color: #8af;
 }
 
-button.delete{
+button.create{
+  background-color: #382;;
+}
+button.danger {
+  background-color: #b32;
+}
+button.small{
   padding: 2px 5px;
-  background-color: #b32;;
+  font-size: 1rem;
 }
 input, textarea, .popup {
   border: 1px solid grey;
   background-color: #555;
-  
-  padding: 5px 20px;
+  padding: 5px;
   color: white;
 }
+input {
+  padding: 5px 20px;
+  margin-bottom: 5px;
+}
+.center{
+  text-align: center;
+}
 .popup{
+  padding: 15px;
   background-color: #333;
   position: fixed;
   box-sizing: border-box;
-  top: 20%;
-  left: 50px;
-  right: 50px;
-  bottom: 50px;
-  overflow-y: scroll;
+  top: 10%;
+  left: 10%;
+  max-height: 80%;
+  max-width: 80%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 .popup::before{
   content: "";
@@ -69,6 +83,10 @@ input, textarea, .popup {
   bottom: 0;
   left: 0;
   background-color: black;
-  opacity: 0.5;
+  opacity: 0.75;
   z-index: -1;
+}
+
+.tree-view-item .tree-view-item-key-with-chevron[data-v-efc5bae2]::before {
+  color: green;
 }
