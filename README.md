@@ -107,7 +107,7 @@ res (groups[])
 
 ## POST  /notes/update
 ```
-req (noteId, ?groupId)
+req (noteId, text, ?groupId)
 res (notes[])
 ```
 * Update a note
@@ -117,7 +117,7 @@ res (notes[])
 
 ## POST  /groups/update
 ```
-req (groupId)
+req (groupId, text)
 res (groups[])
 ```
 * Update a group
