@@ -4,7 +4,7 @@ const passwordHash = require('password-hash');
 
 const url = "mongodb://localhost:27017"
 
-var db
+let db
 
 /* Schema
 All documents have an _id field
@@ -54,7 +54,7 @@ function ownerQuery(req) {
 
 const GET_HANDLERS = {
   "/db": (req, res) => {
-    var mongo = {}
+    let mongo = {}
     Promise.all([
       db.collection('users').find().toArray()
         .then(users => { mongo.users = users }),
@@ -67,11 +67,12 @@ const GET_HANDLERS = {
         res.send({ success: true, mongo })
       })
   },
-  "/notes": (req, res) => {
+  "/notes": (req, res, insertedId) => {
     if (!req.session.uid) {
       notLoggedIn(res)
     } else {
-      let groupId = req.query.groupId || false
+      console.log("BODY", req.query)
+      let groupId = (req.query.groupId==0 ? undefined : req.query.groupId)
       Promise.resolve()
         .then(() => {
           if (groupId) {
@@ -94,14 +95,14 @@ const GET_HANDLERS = {
             .sort({ createdOn: -1 }).toArray()
         })
         .then(notes => {
-          res.send({ success: true, notes })
+          res.send({ success: true, notes, insertedId })
         })
         .catch(error => {
           res.send({ success: false, error })
         })
     }
   },
-  "/groups": (req, res) => {
+  "/groups": (req, res, insertedId) => {
     if (!req.session.uid) {
       notLoggedIn(res)
     } else {
@@ -109,7 +110,7 @@ const GET_HANDLERS = {
         .find({ owner: { $eq: new ObjectID(req.session.uid) } })
         .toArray()
         .then(groups => {
-          res.send({ success: true, groups })
+          res.send({ success: true, groups, insertedId })
         })
         .catch(error => res.send({ success: false, error }))
     }
@@ -146,6 +147,7 @@ const POST_HANDLERS = {
   "/login": (req, res) => {
     let username = req.body.username
     let password = req.body.password
+    console.log(req.body)
 
     if (!username) {
       res.send({ success: false, error: "No 'username' provided" })
@@ -181,20 +183,22 @@ const POST_HANDLERS = {
     } else if (!req.body.text) {
       res.send({ success: false, error: "No 'text' provided" })
     } else {
-      var groupId = req.body.groupId
-      var note = {
+      let groupId = (req.body.groupId==0 ? undefined : req.body.groupId)
+      let note = {
         owner: new ObjectID(req.session.uid),
         text: req.body.text,
         createdOn: new Date(),
         completedOn: false
       }
+      let insertedId = null
       db.collection('notes')
         .insertOne(note)
         .then(insertDetails => {
+          insertedId = insertDetails.insertedId
           if (groupId) {
             return db.collection("groups").findAndModify(
               byId(groupId), [['_id', 'asc']],
-              { $push: { notes: insertDetails.insertedId } })
+              { $push: { notes: insertedId } })
           } else {
             return Promise.resolve()
           }
@@ -202,9 +206,12 @@ const POST_HANDLERS = {
         .then(() => {
           req.query = req.query || {}
           req.query['groupId'] = groupId
-          GET_HANDLERS["/notes"](req, res)
+          GET_HANDLERS["/notes"](req, res, insertedId)
         })
-        .catch(error => res.send({ success: false, error }))
+        .catch(error => {
+          console.log({ error })
+          res.send({ success: false, error, part: 1 })
+        })
     }
   },
   "/notes/update": (req, res) => {
@@ -215,8 +222,9 @@ const POST_HANDLERS = {
     } else if (!req.body.text) {
       res.send({ success: false, error: "No updated 'text' provided" })
     } else {
-      var { noteId, groupId, text } = req.body
-      var query = {
+      let { noteId, text } = req.body
+      let groupId = (req.body.groupId==0 ? undefined : req.body.groupId)
+      let query = {
         $and: [
           ownerQuery(req),
           { _id: { $eq: new ObjectID(noteId) } }
@@ -240,8 +248,9 @@ const POST_HANDLERS = {
     } else if (!req.body.noteId) {
       res.send({ success: false, error: "No 'noteId' provided" })
     } else {
-      var { noteId, groupId } = req.body
-      var query = {
+      let { noteId } = req.body
+      let groupId = (req.body.groupId==0 ? undefined : req.body.groupId)
+      let query = {
         $and: [
           ownerQuery(req),
           { _id: { $eq: new ObjectID(noteId) } }
@@ -271,8 +280,8 @@ const POST_HANDLERS = {
         notes: []
       }
       db.collection("groups").insertOne(group)
-        .then(() => {
-          GET_HANDLERS["/groups"](req, res)
+        .then(insertDetails => {
+          GET_HANDLERS["/groups"](req, res, insertDetails.insertedId)
         })
         .catch(error => res.send({ success: false, error }))
     }
@@ -280,13 +289,13 @@ const POST_HANDLERS = {
   "/groups/update": (req, res) => {
     if (!req.session.uid) {
       notLoggedIn(res)
-    } else if (!req.body.groupId) {
+    } else if (!req.body.groupId || req.body.groupId == 0) {
       res.send({ success: false, error: "No 'groupId' provided" })
     } else if (!req.body.text) {
       res.send({ success: false, error: "No updated 'text' provided" })
     } else {
-      var { groupId, text } = req.body
-      var query = {
+      let { groupId, text } = req.body
+      let query = {
         $and: [
           ownerQuery(req),
           { _id: { $eq: new ObjectID(groupId) } }
@@ -302,11 +311,11 @@ const POST_HANDLERS = {
   "/groups/remove": (req, res) => {
     if (!req.session.uid) {
       notLoggedIn(res)
-    } else if (!req.body.groupId) {
+    } else if (!req.body.groupId || req.body.groupId==0) {
       res.send({ success: false, error: "No 'groupId' provided" })
     } else {
-      var { groupId } = req.body
-      var query = {
+      let { groupId } = req.body
+      let query = {
         $and: [
           ownerQuery(req),
           { _id: { $eq: new ObjectID(groupId) } }
@@ -326,10 +335,10 @@ module.exports = function (app) {
     console.log(`Request[${req.method}]: ${req.path}`)
     next()
   })
-  for (var route in GET_HANDLERS) {
+  for (let route in GET_HANDLERS) {
     app.get(route, GET_HANDLERS[route])
   }
-  for (var route in POST_HANDLERS) {
+  for (let route in POST_HANDLERS) {
     app.post(route, POST_HANDLERS[route])
   }
 }

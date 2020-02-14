@@ -161,7 +161,9 @@ var app = new Vue({
     removeGroup(groupId) {
       $.post("/groups/remove", { groupId }, res => {
         if (res.success) {
+          this.groupId = ""
           this.groups = res.groups
+          this.getNotes()
         } else {
           this.res = res
         }

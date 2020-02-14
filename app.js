@@ -32,9 +32,8 @@ app.use(cors({
   preflightContinue: true,
   credentials: true
 }))
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(function (req, res, next) {
   //TODO Log all requests
   next()
